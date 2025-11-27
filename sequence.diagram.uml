@@ -1,35 +1,34 @@
-@startuml
+@startuml UmrahTravelAgent_Sequence
 
 actor Pilgrim
 participant Agent
-participant Event
 participant Package
-participant Reservation
-participant Hotel
+participant Event
 participant Transport
+participant Hotel
+participant Room
+participant Reservation
+participant Alert
 
-' === Agent sets up the system ===
-Agent -> Event : Create and manage events
-Agent -> Package : Create and manage packages
-Agent -> Hotel : Configure hotels
-Agent -> Transport : Arrange transport
-Agent -> Reservation : Oversee reservations
+== Booking Flow ==
 
-' === Pilgrim interaction ===
-Pilgrim -> Agent : Contact agent for trip info
-Agent -> Event : Show available events
-Event -> Package : List packages for this event
-Package -> Transport : Show transport details
-Package -> Hotel : Show hotel options
+Pilgrim -> Agent : Request Umrah package
+Agent -> Package : Create package (linked to Event)
+Package -> Event : Associate with group program
+Package -> Transport : Assign transport(s)
+Package -> Hotel : Assign hotel(s)
 
-Pilgrim -> Agent : Request to book package
-Agent -> Package : Select package for pilgrim
-Agent -> Reservation : Create reservation
-Reservation -> Hotel : Assign hotel
-Reservation -> Transport : Confirm transport
-Reservation -> Event : Link to event
+Agent -> Reservation : Create reservation for Pilgrim
+Reservation -> Room : Reserve room in hotel
+Reservation -> Package : Link reservation to package
 
-Pilgrim -> Agent : Make payment (total, paid, remaining)
-Agent -> Reservation : Update payment status
+Reservation -> Pilgrim : Confirm booking details
+Pilgrim -> Reservation : Make payment (montantPaye)
+Reservation -> Pilgrim : Show remaining balance (totalPrix - montantPaye)
+
+== Alerts Flow ==
+
+Reservation -> Alert : Generate alert (payment, travel info)
+Alert -> Pilgrim : Notify pilgrim
 
 @enduml

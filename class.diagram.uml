@@ -1,6 +1,6 @@
-@startuml UmrahTravelAgent
+@startuml UmrahTravelAgent_FullCorrected
 
-'==================== CORE CLASSES ====================
+'==================== CORE ENTITIES ====================
 
 class Pilgrim {
   +id: int
@@ -12,7 +12,7 @@ class Pilgrim {
   +tel_1: String
   +tel_2: String
   +typeDiabete: String
-  +commentaire: Text
+  +commentaire: String
 }
 
 class PassportInfo {
@@ -29,14 +29,22 @@ class Agent {
   +telephone: String
 }
 
+class Event {
+  +id: int
+  +code: String          
+  +departDate: Date
+  +returnDate: Date
+  +departCity: String
+  +destinations: String
+  +description: String
+}
+
 class Package {
   +id: int
-  +typePack: String
-  +typePelerin: String
+  +typePack: String       // Gold, Standard, VIP...
+  +category: String       // Adult, Child...
   +programme: String
-  +chambre: String
   +agentId: int
-  +transportId: int
   +eventId: int
 }
 
@@ -47,15 +55,21 @@ class Hotel {
   +distanceMasjid: int
 }
 
+class Room {
+  +id: int
+  +hotelId: int
+  +type: String         // Single, Double, Triple, Quad
+  +capacity: int
+  +pricePerNight: Decimal
+}
+
 class Reservation {
   +id: int
   +pilgrimId: int
   +packageId: int
-  +hotelId: int
-  +eventId: int
-  +tPrix: Decimal
-  +paye: Decimal
-  +reste: Decimal
+  +roomId: int
+  +totalPrix: Decimal
+  +montantPaye: Decimal
   +selectionne: Boolean
 }
 
@@ -63,51 +77,52 @@ class Alert {
   +id: int
   +pilgrimId: int
   +type: String
-  +message: Text
+  +message: String
 }
 
 class Transport {
   +id: int
-  +type: String        // Flight, Bus, Train
-  +provider: String    // Airline, Bus company
+  +type: String            // Flight, Bus, Train
+  +provider: String
   +departCity: String
   +arriveCity: String
   +departDate: Date
   +arriveDate: Date
-  +status: String      // Confirmed, Pending, Cancelled
+  +status: String          // Confirmed, Pending, Cancelled
+  +reference: String       // flight number, bus ref...
+}
+
+class PackageTransport {
+  +id: int
+  +packageId: int
+  +transportId: int
 }
 
 class Relationship {
   +id: int
-  +fromPilgrimId: int   // FK → Pilgrim.id
-  +toPilgrimId: int     // FK → Pilgrim.id
-  +relationType: String // Husband, Wife, Father, Mother, etc.
-}
-
-class Event {
-  +id: int
-  +code: String           // e.g., GF_01/12 - 14/12_CMN BAH MEI
-  +departDate: Date
-  +returnDate: Date
-  +departCity: String
-  +destinations: String   // e.g., BAH, MEI
-  +description: Text
+  +pilgrimAId: int
+  +pilgrimBId: int
+  +relationType: String   // Husband, Wife, Father, Mother...
 }
 
 '==================== RELATIONSHIPS ====================
 
-Pilgrim "1" -- "0..*" PassportInfo : has
-Pilgrim "1" -- "0..*" Reservation : books
-Pilgrim "1" -- "0..*" Alert : triggers
-Pilgrim "1" -- "0..*" Relationship : defines
-Relationship "1" -- "1" Pilgrim : relates to
+Pilgrim "1" -- "0..*" PassportInfo : has >
+Pilgrim "1" -- "0..*" Reservation : books >
+Pilgrim "1" -- "0..*" Alert : triggers >
 
-Agent "1" -- "0..*" Package : manages
-Transport "1" -- "0..*" Package : provides
-Hotel "1" -- "0..*" Reservation : hosts
-Package "1" -- "0..*" Reservation : includes
+' Relationship properly linked
+Pilgrim "1" -- "0..*" Relationship : defines >
+Relationship "1" -- "1" Pilgrim : relates to >
 
-Event "1" -- "0..*" Package : includes
-Event "1" -- "0..*" Reservation : schedules
+Agent "1" -- "0..*" Package : manages >
+Event "1" -- "0..*" Package : includes >
+
+Hotel "1" -- "0..*" Room : offers >
+Room "1" -- "0..*" Reservation : used in >
+Package "1" -- "0..*" Reservation : referenced by >
+
+Package "1" -- "0..*" PackageTransport : uses >
+Transport "1" -- "0..*" PackageTransport : assigned to >
 
 @enduml

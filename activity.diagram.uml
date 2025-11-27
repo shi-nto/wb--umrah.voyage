@@ -1,0 +1,33 @@
+@startuml ActivityDiagram_Booking
+
+start
+
+:Pilgrim requests booking;
+
+:Agent proposes package;
+:Package linked to Event, Transport, Hotel;
+
+:Provide Passport Info;
+:Verify Passport;
+
+if (Passport valid?) then (No)
+  :Trigger Alert (Invalid Passport);
+  stop
+else (Yes)
+  :Create Reservation;
+  :Reserve Hotel Room;
+  :Register in Event;
+endif
+
+:Make Payment;
+
+if (Payment complete?) then (No)
+  :Trigger Alert (Payment Reminder);
+  stop
+else (Yes)
+  :Confirm Booking;
+endif
+
+stop
+
+@enduml
