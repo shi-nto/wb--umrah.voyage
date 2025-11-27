@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             AlertSeeder::class,
             PackageSeeder::class,
             TransportSeeder::class,
+            PackageTransportSeeder::class,
+            PackageHotelSeeder::class,
             ReservationSeeder::class,
         ]);
     }

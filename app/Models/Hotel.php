@@ -23,4 +23,9 @@ class Hotel extends Model
     {
         return $this->hasMany(Room::class);
     }
+
+    public function packages()
+    {
+        return $this->belongsToMany(Package::class, 'package_hotels');
+    }
 }

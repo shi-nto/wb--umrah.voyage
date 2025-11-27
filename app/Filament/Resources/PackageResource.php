@@ -53,7 +53,13 @@ class PackageResource extends Resource
                     ->relationship('transports', 'type')
                     ->multiple()
                     ->preload()
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->type} - {$record->provider} - {$record->departCity} to {$record->arriveCity} - {$record->reference}"),
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->type} - {$record->provider} - {$record->departCity} to {$record->arriveCity} - {$record->reference} - SAR " . number_format($record->price, 2)),
+                Forms\Components\Select::make('hotels')
+                    ->label('Hotels')
+                    ->relationship('hotels', 'nom')
+                    ->multiple()
+                    ->preload()
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->nom} - {$record->ville} - {$record->distanceMasjid}km"),
             ]);
     }
 

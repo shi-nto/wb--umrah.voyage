@@ -1,0 +1,7 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+    @foreach($records as $record)
+        <div class="w-full">
+            @include('filament.tables.reservation-card', ['record' => $record])
+        </div>
+    @endforeach
+</div>

@@ -20,9 +20,9 @@ class Pilgrim extends Model
         'commentaire',
     ];
 
-    public function passportInfos()
+    public function passportInfo()
     {
-        return $this->hasMany(PassportInfo::class);
+        return $this->hasOne(PassportInfo::class);
     }
 
     public function reservations()
@@ -37,11 +37,11 @@ class Pilgrim extends Model
 
     public function relationshipsFrom()
     {
-        return $this->hasMany(Relationship::class, 'from_pilgrim_id');
+        return $this->hasMany(Relationship::class, 'pilgrim_a_id');
     }
 
     public function relationshipsTo()
     {
-        return $this->hasMany(Relationship::class, 'to_pilgrim_id');
+        return $this->hasMany(Relationship::class, 'pilgrim_b_id');
     }
 }

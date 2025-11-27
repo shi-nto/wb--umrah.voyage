@@ -15,6 +15,7 @@ class Transport extends Model
         'arriveDate',
         'status',
         'reference',
+        'price',
     ];
 
     public function packages()

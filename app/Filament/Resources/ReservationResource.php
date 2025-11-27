@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ReservationResource extends Resource
@@ -23,8 +24,14 @@ class ReservationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->role === 'admin';
+    }
+
     public static function canViewAny(): bool
     {
+        // Allow admin and agent to view, but navigation is hidden for agents
         return auth()->check() && in_array(auth()->user()->role, ['admin', 'agent']);
     }
 
@@ -38,65 +45,128 @@ class ReservationResource extends Resource
                             ->label('Select Pilgrim')
                             ->relationship('pilgrim', 'nomFrancais')
                             ->required()
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('nomFrancais')
-                                    ->label('French Name')
-                                    ->required(),
-                                Forms\Components\TextInput::make('nomArabe')
-                                    ->label('Arabic Last Name')
-                                    ->required(),
-                                Forms\Components\TextInput::make('prenomArabe')
-                                    ->label('Arabic First Name')
-                                    ->required(),
-                                Forms\Components\DatePicker::make('dateNaissance')
-                                    ->label('Date of Birth')
-                                    ->required(),
-                                Forms\Components\TextInput::make('ville')
-                                    ->label('City')
-                                    ->required(),
-                                Forms\Components\TextInput::make('tel_1')
-                                    ->label('Phone 1')
-                                    ->required(),
-                                Forms\Components\TextInput::make('tel_2')
-                                    ->label('Phone 2 (Optional)'),
-                            ]),
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                if ($state) {
+                                    $pilgrim = \App\Models\Pilgrim::with('passportInfo', 'relationshipsFrom.pilgrimB', 'relationshipsTo.pilgrimA', 'reservations.package')->find($state);
+                                    $set('pilgrim_info', $pilgrim ? "Name: {$pilgrim->nomFrancais} | Phone: {$pilgrim->tel_1} | City: {$pilgrim->ville}" : '');
+                                    
+                                    // Passport
+                                    $passport = $pilgrim->passportInfo;
+                                    $passportInfo = $passport ? "Number: {$passport->numeroPasseport}, Issue: {$passport->dateDelivrance}, Expiry: {$passport->dateExpiration}" : 'No passport information available';
+                                    $set('pilgrim_passport', $passportInfo);
+                                    
+                                    // Relationships
+                                    $relationships = collect($pilgrim->relationshipsFrom)->merge($pilgrim->relationshipsTo);
+                                    $relInfo = $relationships->map(function ($rel) use ($pilgrim) {
+                                        $other = $rel->pilgrim_a_id == $pilgrim->id ? $rel->pilgrimB : $rel->pilgrimA;
+                                        return "- {$rel->relationType}: {$other->nomFrancais}";
+                                    })->join("\n");
+                                    $set('pilgrim_relationships', $relInfo ?: 'No family relationships');
+                                    
+                                    // Other Reservations
+                                    $currentId = $get('id');
+                                    $reservations = $pilgrim->reservations->filter(function ($res) use ($currentId) {
+                                        return $res->id != $currentId;
+                                    });
+                                    $resInfo = $reservations->map(function ($res) {
+                                        return "- Package: {$res->package->typePack}, Confirmed: " . ($res->selectionne ? 'Yes' : 'No');
+                                    })->join("\n");
+                                    $set('pilgrim_reservations', $resInfo ?: 'No other reservations');
+                                } else {
+                                    $set('pilgrim_info', '');
+                                    $set('pilgrim_passport', '');
+                                    $set('pilgrim_relationships', '');
+                                    $set('pilgrim_reservations', '');
+                                }
+                            }),
+                        Forms\Components\TextInput::make('pilgrim_info')
+                            ->label('Pilgrim Details')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('pilgrim_passport')
+                            ->label('Passport Information')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('pilgrim_relationships')
+                            ->label('Family Relationships')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->columnSpanFull()
+                            ->rows(2),
+                        Forms\Components\Textarea::make('pilgrim_reservations')
+                            ->label('Other Reservations')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->columnSpanFull()
+                            ->rows(3),
                     ])
                     ->columns(1),
 
                 Forms\Components\Section::make('Package & Room Selection')
                     ->schema([
-                        Forms\Components\Select::make('selected_event')
-                            ->label('Select Event')
-                            ->options(\App\Models\Event::pluck('code', 'id'))
-                            ->reactive()
-                            ->required()
-                            ->placeholder('Choose an event first'),
+                        Forms\Components\Hidden::make('transport_total'),
+                        Forms\Components\Hidden::make('event_days'),
                         
                         Forms\Components\Select::make('package_id')
                             ->label('Umrah Package')
-                            ->options(function (callable $get) {
-                                $eventId = $get('selected_event');
-                                if ($eventId) {
-                                    return \App\Models\Package::where('event_id', $eventId)->pluck('typePack', 'id');
-                                }
-                                return [];
-                            })
+                            ->relationship('package', 'typePack')
                             ->required()
-                            ->placeholder('Select an event first')
                             ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set) {
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->typePack} - {$record->category} - {$record->programme}")
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 if ($state) {
-                                    $package = \App\Models\Package::find($state);
-                                    // You can auto-calculate price based on package here
+                                    $package = \App\Models\Package::with('transports', 'event')->find($state);
+                                    if ($package) {
+                                        $transportTotal = $package->transports->sum('price');
+                                        $set('transport_total', $transportTotal);
+                                        
+                                        if ($package->event) {
+                                            $start = Carbon::parse($package->event->start_date);
+                                            $end = Carbon::parse($package->event->end_date);
+                                            $days = $end->diffInDays($start) + 1; // number of days
+                                            $set('event_days', $days);
+                                        }
+                                        
+                                        // Update total if room is selected
+                                        $roomId = $get('room_id');
+                                        if ($roomId) {
+                                            $room = \App\Models\Room::find($roomId);
+                                            $days = $get('event_days') ?? 0;
+                                            $hotelTotal = $room ? $room->pricePerNight * $days : 0;
+                                            $set('totalPrix', $transportTotal + $hotelTotal);
+                                        }
+                                    }
+                                } else {
+                                    $set('transport_total', 0);
+                                    $set('event_days', 0);
+                                    $set('totalPrix', 0);
                                 }
                             }),
                         
                         Forms\Components\Select::make('selected_hotel')
-                            ->label('Select Hotel')
-                            ->options(\App\Models\Hotel::pluck('nom', 'id'))
-                            ->reactive()
+                            ->label('Select Hotel from Package')
+                            ->options(function (callable $get) {
+                                $packageId = $get('package_id');
+                                if ($packageId) {
+                                    $package = \App\Models\Package::with('hotels')->find($packageId);
+                                    if ($package) {
+                                        return $package->hotels->pluck('nom', 'id');
+                                    }
+                                }
+                                return [];
+                            })
                             ->required()
-                            ->placeholder('Choose a hotel first'),
+                            ->placeholder('Select a package first')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                // Reset room when hotel changes
+                                $set('room_id', null);
+                                $transportTotal = $get('transport_total') ?? 0;
+                                $set('totalPrix', $transportTotal);
+                            }),
                         
                         Forms\Components\Select::make('room_id')
                             ->label('Select Room')
@@ -119,9 +189,19 @@ class ReservationResource extends Resource
                                 return [];
                             })
                             ->required()
-                            ->placeholder('Select a hotel first'),
+                            ->placeholder('Select a hotel first')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                if ($state) {
+                                    $room = \App\Models\Room::find($state);
+                                    $days = $get('event_days') ?? 0;
+                                    $hotelTotal = $room ? $room->pricePerNight * $days : 0;
+                                    $transportTotal = $get('transport_total') ?? 0;
+                                    $set('totalPrix', $transportTotal + $hotelTotal);
+                                }
+                            }),
                     ])
-                    ->columns(2),
+                    ->columns(1),
 
                 Forms\Components\Section::make('Payment Details')
                     ->schema([
@@ -130,10 +210,13 @@ class ReservationResource extends Resource
                             ->required()
                             ->numeric()
                             ->prefix('SAR')
+                            ->default(0)
+                            ->disabled()
+                            ->dehydrated(true)
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $get, callable $set) {
-                                $paid = $get('montantPaye') ?? 0;
-                                $balance = $state - $paid;
+                                $paid = (float) ($get('montantPaye') ?? 0);
+                                $balance = (float) $state - $paid;
                                 $set('balance_display', number_format($balance, 2));
                             }),
                         
@@ -141,19 +224,13 @@ class ReservationResource extends Resource
                             ->label('Amount Paid (SAR)')
                             ->numeric()
                             ->prefix('SAR')
-                            ->default(0)
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
-                                $total = $get('totalPrix') ?? 0;
-                                $balance = $total - $state;
-                                $set('balance_display', number_format($balance, 2));
-                            }),
+                            ->default(0),
                         
                         Forms\Components\Placeholder::make('balance_display')
                             ->label('Remaining Balance (SAR)')
                             ->content(function (callable $get) {
-                                $total = $get('totalPrix') ?? 0;
-                                $paid = $get('montantPaye') ?? 0;
+                                $total = (float) ($get('totalPrix') ?? 0);
+                                $paid = (float) ($get('montantPaye') ?? 0);
                                 $balance = $total - $paid;
                                 return 'SAR ' . number_format($balance, 2);
                             }),
@@ -171,53 +248,176 @@ class ReservationResource extends Resource
             ]);
     }
 
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->check() && in_array(auth()->user()->role, ['admin', 'agent']);
+    }
+
     public static function table(Table $table): Table
     {
-        return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['pilgrim', 'package', 'room.hotel']))
-            ->columns([
-                Tables\Columns\TextColumn::make('pilgrim.nomFrancais')
-                    ->label('Pilgrim')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('package.typePack')
-                    ->label('Package')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('room.type')
-                    ->label('Room Type')
-                    ->formatStateUsing(function ($record) {
-                        return sprintf(
-                            '%s (%s)',
-                            $record->room->type,
-                            $record->room->hotel->nom ?? 'N/A'
-                        );
-                    }),
-                Tables\Columns\TextColumn::make('totalPrix')
-                    ->label('Total Price')
-                    ->money('SAR')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('montantPaye')
-                    ->label('Paid')
-                    ->money('SAR')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('balance')
-                    ->label('Balance')
-                    ->getStateUsing(function ($record) {
-                        return $record->totalPrix - $record->montantPaye;
+        $viewMode = session('reservation_view', 'table');
+
+        $table = $table
+            ->modifyQueryUsing(function ($query) {
+                $query->with(['pilgrim', 'package', 'room.hotel']);
+                $search = request('search', '');
+                if ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->whereHas('pilgrim', function ($pq) use ($search) {
+                            $pq->where('nomFrancais', 'like', '%' . $search . '%')
+                               ->orWhere('nomArabe', 'like', '%' . $search . '%');
+                        })->orWhereHas('room.hotel', function ($hq) use ($search) {
+                            $hq->where('nom', 'like', '%' . $search . '%');
+                        })->orWhereHas('package', function ($pq) use ($search) {
+                            $pq->where('typePack', 'like', '%' . $search . '%');
+                        });
+                    });
+                }
+                return $query;
+            })
+            ->headerActions([
+                Tables\Actions\Action::make('switch_view')
+                    ->label($viewMode == 'table' ? 'Card View' : 'Table View')
+                    ->action(function () use ($viewMode) {
+                        session(['reservation_view' => $viewMode == 'table' ? 'cards' : 'table']);
                     })
-                    ->money('SAR')
-                    ->color(fn ($state) => $state > 0 ? 'warning' : 'success'),
-                Tables\Columns\IconColumn::make('selectionne')
-                    ->label('Confirmed')
-                    ->boolean()
-                    ->sortable(),
-            ])
+                    ->icon($viewMode == 'table' ? 'heroicon-o-squares-2x2' : 'heroicon-o-table-cells')
+                    ->color('gray'),
+            ]);
+
+        if ($viewMode == 'cards') {
+            $table = $table
+                ->contentGrid([
+                    'default' => 1,
+                    'sm' => 1,
+                    'md' => 2,
+                    'lg' => 3,
+                    'xl' => 5,
+                    '2xl' => 5,
+                ])
+                ->columns([
+                    Tables\Columns\TextColumn::make('pilgrim.nomFrancais')
+                        ->searchable()
+                        ->hidden(),
+                    Tables\Columns\TextColumn::make('card')
+                        ->label('')
+                        ->html()
+                        ->state(function ($record) {
+                            return view('filament.tables.reservation-card', compact('record'))->render();
+                        }),
+                ])
+                ->actions([
+                    Tables\Actions\Action::make('download_pdf')
+                        ->label('Download PDF')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('info')
+                        ->action(function ($record) {
+                            $pdf = app('dompdf.wrapper')->loadView('pdf.reservation', compact('record'));
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'reservation-' . $record->id . '.pdf');
+                        })
+                        ->visible(fn ($record) => $record->selectionne),
+                    Tables\Actions\Action::make('confirm')
+                        ->label('Confirm Booking')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(function ($record) {
+                            $record->update(['selectionne' => true]);
+                            \App\Models\Alert::create([
+                                'pilgrim_id' => $record->pilgrim_id,
+                                'type' => 'Booking Confirmed',
+                                'message' => 'Your Umrah booking has been confirmed.',
+                            ]);
+                        })
+                        ->visible(fn ($record) => !$record->selectionne)
+                        ->requiresConfirmation()
+                        ->modalHeading('Confirm Booking')
+                        ->modalDescription('Are you sure you want to confirm this booking?')
+                        ->modalSubmitActionLabel('Yes, Confirm'),
+                    Tables\Actions\EditAction::make(),
+                ]);
+        } else {
+            $table = $table
+                ->columns([
+                    Tables\Columns\TextColumn::make('pilgrim.nomFrancais')
+                        ->label('Pilgrim')
+                        ->searchable()
+                        ->sortable(),
+                    Tables\Columns\TextColumn::make('package.typePack')
+                        ->label('Package')
+                        ->searchable()
+                        ->sortable(),
+                    Tables\Columns\TextColumn::make('room.type')
+                        ->label('Room Type')
+                        ->formatStateUsing(function ($record) {
+                            return sprintf(
+                                '%s (%s)',
+                                $record->room->type,
+                                $record->room->hotel->nom ?? 'N/A'
+                            );
+                        }),
+                    Tables\Columns\TextColumn::make('totalPrix')
+                        ->label('Total Price')
+                        ->money('SAR')
+                        ->sortable(),
+                    Tables\Columns\TextColumn::make('montantPaye')
+                        ->label('Paid')
+                        ->money('SAR')
+                        ->sortable(),
+                    Tables\Columns\TextColumn::make('balance')
+                        ->label('Balance')
+                        ->getStateUsing(function ($record) {
+                            return $record->totalPrix - $record->montantPaye;
+                        })
+                        ->money('SAR')
+                        ->color(fn ($state) => $state > 0 ? 'warning' : 'success'),
+                    Tables\Columns\IconColumn::make('selectionne')
+                        ->label('Confirmed')
+                        ->boolean()
+                        ->sortable(),
+                ])
+                ->actions([
+                    Tables\Actions\Action::make('download_pdf')
+                        ->label('Download PDF')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('info')
+                        ->action(function ($record) {
+                            $pdf = app('dompdf.wrapper')->loadView('pdf.reservation', compact('record'));
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'reservation-' . $record->id . '.pdf');
+                        })
+                        ->visible(fn ($record) => $record->selectionne),
+                    Tables\Actions\Action::make('confirm')
+                        ->label('Confirm Booking')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(function ($record) {
+                            $record->update(['selectionne' => true]);
+                            \App\Models\Alert::create([
+                                'pilgrim_id' => $record->pilgrim_id,
+                                'type' => 'Booking Confirmed',
+                                'message' => 'Your Umrah booking has been confirmed.',
+                            ]);
+                        })
+                        ->visible(fn ($record) => !$record->selectionne)
+                        ->requiresConfirmation()
+                        ->modalHeading('Confirm Booking')
+                        ->modalDescription('Are you sure you want to confirm this booking?')
+                        ->modalSubmitActionLabel('Yes, Confirm'),
+                    Tables\Actions\EditAction::make(),
+                ]);
+        }
+
+        return $table
             ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Filters\SelectFilter::make('selectionne')
+                    ->label('Status')
+                    ->options([
+                        1 => 'Confirmed',
+                        0 => 'Pending',
+                    ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

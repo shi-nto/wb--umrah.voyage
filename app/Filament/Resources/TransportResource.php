@@ -53,6 +53,11 @@ class TransportResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('reference')
                     ->maxLength(255),
+                Forms\Components\TextInput::make('price')
+                    ->label('Price (SAR)')
+                    ->numeric()
+                    ->prefix('SAR')
+                    ->nullable(),
             ]);
     }
 
@@ -68,6 +73,9 @@ class TransportResource extends Resource
                 Tables\Columns\TextColumn::make('arriveDate'),
                 Tables\Columns\TextColumn::make('status'),
                 Tables\Columns\TextColumn::make('reference'),
+                Tables\Columns\TextColumn::make('price')
+                    ->label('Price')
+                    ->money('SAR'),
             ])
             ->filters([
                 //

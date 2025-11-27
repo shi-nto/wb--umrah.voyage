@@ -1,4 +1,4 @@
-@startuml UmrahTravelAgent_FullCorrected
+@startuml UmrahTravelAgent_FullyCorrected
 
 '==================== CORE ENTITIES ====================
 
@@ -41,8 +41,8 @@ class Event {
 
 class Package {
   +id: int
-  +typePack: String       // Gold, Standard, VIP...
-  +category: String       // Adult, Child...
+  +typePack: String      
+  +category: String      
   +programme: String
   +agentId: int
   +eventId: int
@@ -58,7 +58,7 @@ class Hotel {
 class Room {
   +id: int
   +hotelId: int
-  +type: String         // Single, Double, Triple, Quad
+  +type: String        
   +capacity: int
   +pricePerNight: Decimal
 }
@@ -82,41 +82,61 @@ class Alert {
 
 class Transport {
   +id: int
-  +packageId: int        // direct FK to Package
-  +type: String          // Flight, Bus, Train
+  +type: String          
   +provider: String
   +departCity: String
   +arriveCity: String
   +departDate: Date
   +arriveDate: Date
-  +status: String        // Confirmed, Pending, Cancelled
-  +reference: String     // flight number, bus ref...
+  +status: String        
+  +reference: String     
+  +price: Decimal        // Added Transport Price
+}
+
+class PackageTransport {
+  +id: int
+  +packageId: int
+  +transportId: int
+  +direction: String     
+  +segmentOrder: int
 }
 
 class Relationship {
   +id: int
   +pilgrimAId: int
   +pilgrimBId: int
-  +relationType: String   // Husband, Wife, Father, Mother...
+  +relationType: String  
+}
+
+class PackageHotel {
+  +id: int
+  +packageId: int
+  +hotelId: int
+  +city: String         
+  +nights: int
 }
 
 '==================== RELATIONSHIPS ====================
 
-Pilgrim "1" -- "0..*" PassportInfo : has >
+Pilgrim "1" -- "1" PassportInfo : has >
 Pilgrim "1" -- "0..*" Reservation : books >
 Pilgrim "1" -- "0..*" Alert : triggers >
 
-' Relationship properly linked
-Pilgrim "1" -- "0..*" Relationship : defines >
-Relationship "1" -- "1" Pilgrim : relates to >
+Pilgrim "1" -- "0..*" Relationship : is A >
+Pilgrim "1" -- "0..*" Relationship : is B >
 
 Agent "1" -- "0..*" Package : manages >
 Event "1" -- "0..*" Package : includes >
 
-Hotel "1" -- "0..*" Room : offers >
-Room "1" -- "0..*" Reservation : used in >
-Package "1" -- "0..*" Reservation : referenced by >
+Package "1" -- "0..*" PackageHotel : includes >
+PackageHotel "1" -- "1" Hotel : uses >
 
-Package "1" -- "0..*" Transport : includes >
+Hotel "1" -- "0..*" Room : offers >
+Room "1" -- "0..*" Reservation : usedFor >
+
+Package "1" -- "0..*" Reservation : referenced >
+
+Package "1" -- "0..*" PackageTransport : uses >
+Transport "1" -- "0..*" PackageTransport : assignedTo >
 
 @enduml

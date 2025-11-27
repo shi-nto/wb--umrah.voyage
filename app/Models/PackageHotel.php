@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PackageTransport extends Model
+class PackageHotel extends Model
 {
     protected $fillable = [
         'package_id',
-        'transport_id',
-        'direction',
-        'segment_order',
+        'hotel_id',
+        'city',
+        'nights',
     ];
 
     public function package()
@@ -18,8 +18,8 @@ class PackageTransport extends Model
         return $this->belongsTo(Package::class);
     }
 
-    public function transport()
+    public function hotel()
     {
-        return $this->belongsTo(Transport::class);
+        return $this->belongsTo(Hotel::class);
     }
 }

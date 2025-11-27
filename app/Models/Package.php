@@ -35,4 +35,9 @@ class Package extends Model
     {
         return $this->belongsToMany(Transport::class, 'package_transports');
     }
+
+    public function hotels()
+    {
+        return $this->belongsToMany(Hotel::class, 'package_hotels');
+    }
 }
