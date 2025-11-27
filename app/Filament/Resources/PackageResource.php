@@ -17,40 +17,43 @@ class PackageResource extends Resource
 {
     protected static ?string $model = Package::class;
 
-    protected static ?string $navigationGroup = 'Travel';
+    protected static ?string $navigationGroup = 'Bookings';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-briefcase';
+
+    public static function canViewAny(): bool
+    {
+        return auth()->check() && in_array(auth()->user()->role, ['admin', 'agent']);
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('typePack')
+                    ->label('Package Type')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('typePelerin')
+                Forms\Components\TextInput::make('category')
+                    ->label('Category')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('programme')
+                Forms\Components\Textarea::make('programme')
+                    ->label('Program Description')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Select::make('agent_id')
-                    ->relationship('agent', 'nom')
-                    ->default(function () {
-                        $user = auth()->user();
-                        if ($user && $user->role === 'agent') {
-                            $agent = \App\Models\Agent::where('nom', $user->name)->first();
-                            return $agent ? $agent->id : null;
-                        }
-                        return null;
-                    })
-                    ->visible(fn () => auth()->user()->role !== 'agent')
-                    ->required(fn () => auth()->user()->role === 'admin'),
                 Forms\Components\Select::make('event_id')
+                    ->label('Event')
                     ->relationship('event', 'code')
                     ->required(),
+                Forms\Components\Select::make('transports')
+                    ->label('Transports')
+                    ->relationship('transports', 'type')
+                    ->multiple()
+                    ->preload()
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->type} - {$record->provider} - {$record->departCity} to {$record->arriveCity} - {$record->reference}"),
             ]);
     }
 
@@ -58,11 +61,17 @@ class PackageResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('typePack'),
-                Tables\Columns\TextColumn::make('typePelerin'),
-                Tables\Columns\TextColumn::make('programme'),
-                Tables\Columns\TextColumn::make('agent.nom'),
-                Tables\Columns\TextColumn::make('event.code'),
+                Tables\Columns\TextColumn::make('typePack')
+                    ->label('Package Type')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('category')
+                    ->label('Category'),
+                Tables\Columns\TextColumn::make('programme')
+                    ->label('Program')
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('event.code')
+                    ->label('Event Code')
+                    ->sortable(),
             ])
             ->filters([
                 //

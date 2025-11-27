@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('packages', function (Blueprint $table) {
-            $table->dropColumn('chambre');
-        });
+        Schema::dropIfExists('package_transports');
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::table('packages', function (Blueprint $table) {
-            $table->string('chambre')->nullable();
-        });
+        // Recreate the table if needed, but since we're removing it, maybe leave empty or recreate
+        // For simplicity, leave as is
     }
 };

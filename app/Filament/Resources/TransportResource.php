@@ -23,6 +23,11 @@ class TransportResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function canViewAny(): bool
+    {
+        return auth()->check() && auth()->user()->role === 'admin';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -46,6 +51,8 @@ class TransportResource extends Resource
                 Forms\Components\TextInput::make('status')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('reference')
+                    ->maxLength(255),
             ]);
     }
 
@@ -60,6 +67,7 @@ class TransportResource extends Resource
                 Tables\Columns\TextColumn::make('departDate'),
                 Tables\Columns\TextColumn::make('arriveDate'),
                 Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\TextColumn::make('reference'),
             ])
             ->filters([
                 //

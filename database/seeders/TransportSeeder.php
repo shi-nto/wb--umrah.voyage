@@ -20,6 +20,7 @@ class TransportSeeder extends Seeder
             'departDate' => '2025-12-01',
             'arriveDate' => '2025-12-01',
             'status' => 'Confirmed',
+            'reference' => 'RAM123',
         ]);
 
         \App\Models\Transport::create([
@@ -30,6 +31,7 @@ class TransportSeeder extends Seeder
             'departDate' => '2025-12-05',
             'arriveDate' => '2025-12-05',
             'status' => 'Pending',
+            'reference' => 'BUS456',
         ]);
     }
 }

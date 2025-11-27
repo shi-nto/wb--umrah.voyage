@@ -17,15 +17,9 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
-            'role' => 'admin',
-        ]);
-
         $this->call([
+            AdminUserSeeder::class,
             AgentSeeder::class,
-            TransportSeeder::class,
             EventSeeder::class,
             HotelSeeder::class,
             RoomSeeder::class,
@@ -34,7 +28,7 @@ class DatabaseSeeder extends Seeder
             RelationshipSeeder::class,
             AlertSeeder::class,
             PackageSeeder::class,
-            PackageTransportSeeder::class,
+            TransportSeeder::class,
             ReservationSeeder::class,
         ]);
     }

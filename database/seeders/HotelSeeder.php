@@ -12,16 +12,6 @@ class HotelSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Hotel::create([
-            'nom' => 'Hotel Al Safat',
-            'ville' => 'Makkah',
-            'distanceMasjid' => 500,
-        ]);
-
-        \App\Models\Hotel::create([
-            'nom' => 'Hotel Madinah Plaza',
-            'ville' => 'Madinah',
-            'distanceMasjid' => 300,
-        ]);
+        \App\Models\Hotel::factory(20)->create();
     }
 }

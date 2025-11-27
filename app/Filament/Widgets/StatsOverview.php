@@ -35,10 +35,15 @@ class StatsOverview extends BaseWidget
                 ->description('Rooms across hotels')
                 ->descriptionIcon('heroicon-m-home-modern')
                 ->color('gray'),
-            Stat::make('Total Revenue', 'SAR ' . number_format(Reservation::sum('tPrix'), 2))
+            Stat::make('Total Revenue', 'SAR ' . number_format(Reservation::sum('totalPrix'), 2))
                 ->description('Total from reservations')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->check() && auth()->user()->role === 'admin';
     }
 }

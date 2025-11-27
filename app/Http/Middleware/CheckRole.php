@@ -15,7 +15,23 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || !in_array(auth()->user()->role, ['admin', 'agent'])) {
+
+        if (!auth()->check()) {
+            \Log::warning('403 Forbidden: User not authenticated', [
+                'ip' => $request->ip(),
+                'url' => $request->fullUrl(),
+            ]);
+            abort(403, 'Unauthorized');
+        }
+
+        if (!in_array(auth()->user()->role, ['admin', 'agent'])) {
+            \Log::warning('403 Forbidden: User does not have required role', [
+                'user_id' => auth()->user()->id,
+                'user_email' => auth()->user()->email,
+                'user_role' => auth()->user()->role,
+                'ip' => $request->ip(),
+                'url' => $request->fullUrl(),
+            ]);
             abort(403, 'Unauthorized');
         }
 

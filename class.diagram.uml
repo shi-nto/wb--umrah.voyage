@@ -82,20 +82,15 @@ class Alert {
 
 class Transport {
   +id: int
-  +type: String            // Flight, Bus, Train
+  +packageId: int        // direct FK to Package
+  +type: String          // Flight, Bus, Train
   +provider: String
   +departCity: String
   +arriveCity: String
   +departDate: Date
   +arriveDate: Date
-  +status: String          // Confirmed, Pending, Cancelled
-  +reference: String       // flight number, bus ref...
-}
-
-class PackageTransport {
-  +id: int
-  +packageId: int
-  +transportId: int
+  +status: String        // Confirmed, Pending, Cancelled
+  +reference: String     // flight number, bus ref...
 }
 
 class Relationship {
@@ -122,7 +117,6 @@ Hotel "1" -- "0..*" Room : offers >
 Room "1" -- "0..*" Reservation : used in >
 Package "1" -- "0..*" Reservation : referenced by >
 
-Package "1" -- "0..*" PackageTransport : uses >
-Transport "1" -- "0..*" PackageTransport : assigned to >
+Package "1" -- "0..*" Transport : includes >
 
 @enduml

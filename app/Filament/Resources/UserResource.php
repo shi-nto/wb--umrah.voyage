@@ -48,10 +48,10 @@ class UserResource extends Resource
                     ->options([
                         'admin' => 'Admin',
                         'agent' => 'Agent',
-                        'user' => 'User',
                     ])
                     ->required(),
-                Forms\Components\Password::make('password')
+                Forms\Components\TextInput::make('password')
+                    ->password()
                     ->required(fn ($context) => $context === 'create')
                     ->dehydrateStateUsing(fn ($state) => bcrypt($state))
                     ->dehydrated(fn ($state) => filled($state)),
