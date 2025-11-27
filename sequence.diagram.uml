@@ -1,1 +1,35 @@
+@startuml
 
+actor Pilgrim
+participant Agent
+participant Event
+participant Package
+participant Reservation
+participant Hotel
+participant Transport
+
+' === Agent sets up the system ===
+Agent -> Event : Create and manage events
+Agent -> Package : Create and manage packages
+Agent -> Hotel : Configure hotels
+Agent -> Transport : Arrange transport
+Agent -> Reservation : Oversee reservations
+
+' === Pilgrim interaction ===
+Pilgrim -> Agent : Contact agent for trip info
+Agent -> Event : Show available events
+Event -> Package : List packages for this event
+Package -> Transport : Show transport details
+Package -> Hotel : Show hotel options
+
+Pilgrim -> Agent : Request to book package
+Agent -> Package : Select package for pilgrim
+Agent -> Reservation : Create reservation
+Reservation -> Hotel : Assign hotel
+Reservation -> Transport : Confirm transport
+Reservation -> Event : Link to event
+
+Pilgrim -> Agent : Make payment (total, paid, remaining)
+Agent -> Reservation : Update payment status
+
+@enduml
