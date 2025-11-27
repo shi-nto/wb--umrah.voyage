@@ -1,0 +1,102 @@
+Absolutely! Here's a solid **database conception (schema)** for your Umrah travel agent application, based on the form you shared. This schema is designed for a **relational database** like MySQL or PostgreSQL and can be adapted for other systems.
+
+---
+
+## 🗃️ Core Database Tables
+
+### 1. `pilgrims`
+Stores personal and passport information.
+
+| Field               | Type         | Description                          |
+|--------------------|--------------|--------------------------------------|
+| id                 | INT (PK)     | Unique pilgrim ID                    |
+| nom_francais       | VARCHAR      | French name                          |
+| nom_arabe          | VARCHAR      | Arabic name                          |
+| prenom_arabe       | VARCHAR      | Arabic first name                    |
+| date_naissance     | DATE         | Birthdate                            |
+| ville              | VARCHAR      | City of residence                    |
+| tel_1              | VARCHAR      | Primary phone                        |
+| tel_2              | VARCHAR      | Secondary phone                      |
+| relation           | VARCHAR      | Relationship type (e.g., parent)     |
+| type_diabete       | VARCHAR      | Medical info                         |
+| commentaire        | TEXT         | Notes or alerts                      |
+
+---
+
+### 2. `passport_info`
+
+| Field               | Type         | Description                          |
+|--------------------|--------------|--------------------------------------|
+| id                 | INT (PK)     | Unique ID                            |
+| pilgrim_id         | INT (FK)     | Linked to `pilgrims.id`              |
+| numero_passeport   | VARCHAR      | Passport number                      |
+| date_delivrance    | DATE         | Issue date                           |
+| date_expiration    | DATE         | Expiry date                          |
+
+---
+
+### 3. `agents`
+
+| Field               | Type         | Description                          |
+|--------------------|--------------|--------------------------------------|
+| id                 | INT (PK)     | Agent ID                             |
+| nom                | VARCHAR      | Agent name                           |
+| telephone          | VARCHAR      | Contact number                       |
+
+---
+
+### 4. `packages`
+
+| Field               | Type         | Description                          |
+|--------------------|--------------|--------------------------------------|
+| id                 | INT (PK)     | Package ID                           |
+| type_pack          | VARCHAR      | e.g., RICK, VIP                      |
+| type_pelerin       | VARCHAR      | e.g., NOUVEAU, ANCIEN                |
+| programme          | VARCHAR      | Program code                         |
+| chambre            | VARCHAR      | Room type                            |
+| statut_transport   | VARCHAR      | Transport status                     |
+| agent_id           | INT (FK)     | Linked to `agents.id`                |
+
+---
+
+### 5. `hotels`
+
+| Field               | Type         | Description                          |
+|--------------------|--------------|--------------------------------------|
+| id                 | INT (PK)     | Hotel ID                             |
+| nom                | VARCHAR      | Hotel name                           |
+| ville              | VARCHAR      | MAKKAH or MADINAH                    |
+| distance_masjid    | INT          | Distance to Haram (in meters)        |
+
+---
+
+### 6. `reservations`
+
+| Field               | Type         | Description                          |
+|--------------------|--------------|--------------------------------------|
+| id                 | INT (PK)     | Reservation ID                       |
+| pilgrim_id         | INT (FK)     | Linked to `pilgrims.id`              |
+| package_id         | INT (FK)     | Linked to `packages.id`              |
+| hotel_id           | INT (FK)     | Linked to `hotels.id`                |
+| t_prix             | DECIMAL      | Total price                          |
+| paye               | DECIMAL      | Amount paid                          |
+| reste              | DECIMAL      | Remaining balance                    |
+| selectionne        | BOOLEAN      | Selected for trip                    |
+
+---
+
+## 🔐 Optional Tables
+
+### 7. `alerts`
+For medical or administrative alerts.
+
+| Field               | Type         | Description                          |
+|--------------------|--------------|--------------------------------------|
+| id                 | INT (PK)     | Alert ID                             |
+| pilgrim_id         | INT (FK)     | Linked to `pilgrims.id`              |
+| type               | VARCHAR      | e.g., medical, visa, payment         |
+| message            | TEXT         | Alert content                        |
+
+---
+
+Would you like me to generate an **ER diagram** or help you write the **SQL code** to create these tables?
