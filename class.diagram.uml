@@ -1,0 +1,113 @@
+@startuml UmrahTravelAgent
+
+'==================== CORE CLASSES ====================
+
+class Pilgrim {
+  +id: int
+  +nomFrancais: String
+  +nomArabe: String
+  +prenomArabe: String
+  +dateNaissance: Date
+  +ville: String
+  +tel_1: String
+  +tel_2: String
+  +typeDiabete: String
+  +commentaire: Text
+}
+
+class PassportInfo {
+  +id: int
+  +pilgrimId: int
+  +numeroPasseport: String
+  +dateDelivrance: Date
+  +dateExpiration: Date
+}
+
+class Agent {
+  +id: int
+  +nom: String
+  +telephone: String
+}
+
+class Package {
+  +id: int
+  +typePack: String
+  +typePelerin: String
+  +programme: String
+  +chambre: String
+  +agentId: int
+  +transportId: int
+  +eventId: int
+}
+
+class Hotel {
+  +id: int
+  +nom: String
+  +ville: String
+  +distanceMasjid: int
+}
+
+class Reservation {
+  +id: int
+  +pilgrimId: int
+  +packageId: int
+  +hotelId: int
+  +eventId: int
+  +tPrix: Decimal
+  +paye: Decimal
+  +reste: Decimal
+  +selectionne: Boolean
+}
+
+class Alert {
+  +id: int
+  +pilgrimId: int
+  +type: String
+  +message: Text
+}
+
+class Transport {
+  +id: int
+  +type: String        // Flight, Bus, Train
+  +provider: String    // Airline, Bus company
+  +departCity: String
+  +arriveCity: String
+  +departDate: Date
+  +arriveDate: Date
+  +status: String      // Confirmed, Pending, Cancelled
+}
+
+class Relationship {
+  +id: int
+  +fromPilgrimId: int   // FK → Pilgrim.id
+  +toPilgrimId: int     // FK → Pilgrim.id
+  +relationType: String // Husband, Wife, Father, Mother, etc.
+}
+
+class Event {
+  +id: int
+  +code: String           // e.g., GF_01/12 - 14/12_CMN BAH MEI
+  +departDate: Date
+  +returnDate: Date
+  +departCity: String
+  +destinations: String   // e.g., BAH, MEI
+  +description: Text
+}
+
+'==================== RELATIONSHIPS ====================
+
+Pilgrim "1" -- "0..*" PassportInfo : has
+Pilgrim "1" -- "0..*" Reservation : books
+Pilgrim "1" -- "0..*" Alert : triggers
+Pilgrim "1" -- "0..*" Relationship : defines
+Relationship "1" -- "1" Pilgrim : relates to
+
+Agent "1" -- "0..*" Package : manages
+Transport "1" -- "0..*" Package : provides
+Hotel "1" -- "0..*" Reservation : hosts
+Package "1" -- "0..*" Reservation : includes
+
+Event "1" -- "0..*" Package : includes
+Event "1" -- "0..*" Reservation : schedules
+
+@enduml
