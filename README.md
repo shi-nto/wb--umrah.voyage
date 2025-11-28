@@ -118,6 +118,10 @@
 
     If you have local images in `storage/app/images` and want to copy the `logo.png` into the publicly served folder, run (PowerShell):
     ```powershell
+    mkdir \storage\app\public\images\
+    ```
+   
+    ```powershell
     cp .\storage\app\images\logo.png .\storage\app\public\images\
     ```
 
