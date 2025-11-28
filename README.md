@@ -1,3 +1,4 @@
+
 # Umrah Voyage
 
 <p align="center">
@@ -6,69 +7,74 @@
 
 ## About The Project
 
-**Umrah Voyage** is a comprehensive management system designed for travel agencies specializing in Umrah pilgrimages. It streamlines the entire process of managing pilgrims, bookings, packages, and logistics, ensuring a smooth experience for both the agency and the pilgrims.
+**Umrah Voyage** is a comprehensive management system for travel agencies specializing in Umrah pilgrimages. It streamlines the process of managing pilgrims, bookings, packages, and logistics, ensuring a smooth experience for both the agency and the pilgrims.
 
-### Key Features
+---
 
-*   **Pilgrim Management**: detailed profiles including personal information, passport details, and family relationships.
-*   **Package Management**: Create and manage travel packages linking events, hotels, and transportation.
-*   **Booking System**: Efficient reservation system for pilgrims, handling room allocation and event registration.
-*   **Logistics**: Manage hotels, rooms, and transportation providers (flights, buses, trains).
-*   **Alert System**: Automated alerts for passport expirations, payment reminders, and other critical notifications.
-*   **Admin Dashboard**: Built with [Filament](https://filamentphp.com/) for a robust and user-friendly administration interface.
+## 📊 System Diagrams
 
-## Technology Stack
+### Activity Diagram
+![Activity Diagram](activity.diagrame.umrah.png)
 
-This project is built using modern web technologies:
+### Class Diagram
+![Class Diagram](class.diagrame.umrah.png)
 
-*   **Framework**: [Laravel 12](https://laravel.com)
-*   **Admin Panel**: [Filament 3](https://filamentphp.com)
-*   **Frontend Styling**: [TailwindCSS 4](https://tailwindcss.com)
-*   **Build Tool**: [Vite](https://vitejs.dev)
-*   **Database**: MySQL
+### Sequence Diagram
+![Sequence Diagram](sequence.diagram.umrah.png)
 
-## Architecture
+---
 
-The project follows a structured architecture to handle complex relationships between pilgrims, bookings, and travel components.
+## ✨ Key Features
 
-*   **Class Diagram**: See [class.diagram.uml](class.diagram.uml) for the data model.
-*   **Activity Diagram**: See [activity.diagram.uml](activity.diagram.uml) for the booking workflow.
+- **Pilgrim Management**: Detailed profiles, passport info, and family relationships.
+- **Package Management**: Create/manage packages linked to events, hotels, and transport.
+- **Booking System**: Reservation system for pilgrims, room allocation, and event registration.
+- **Logistics**: Manage hotels, rooms, and transport providers.
+- **Alert System**: Automated alerts for passport expiry, payment reminders, and more.
+- **Admin Dashboard**: Built with [Filament](https://filamentphp.com/) for a modern, customizable admin experience.
 
-## Getting Started
+---
 
-Follow these steps to set up the project locally.
+## 🛠️ Technology Stack
+
+- **Framework**: Laravel 12
+- **Admin Panel**: Filament 3
+- **Frontend**: TailwindCSS 4
+- **Build Tool**: Vite
+- **Database**: MySQL
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-*   PHP ^8.2
-*   Composer
-*   Node.js & NPM
-*   MySQL
+- PHP ^8.2
+- Composer
+- Node.js & NPM
+- MySQL
 
-### Installation
+### Installation Steps
 
-1.  **Clone the repository**
+1. **Clone the repository**
     ```bash
     git clone https://github.com/yourusername/wb--umrah.voyage.git
     cd wb--umrah.voyage
     ```
-
-2.  **Install PHP dependencies**
+2. **Install PHP dependencies**
     ```bash
     composer install
     ```
-
-3.  **Install JavaScript dependencies**
+3. **Install JavaScript dependencies**
     ```bash
     npm install
     ```
-
-4.  **Environment Setup**
-    Copy the example environment file and configure your database credentials.
+4. **Environment Setup**
+    Copy the example environment file and configure your database credentials:
     ```bash
     cp .env.example .env
     ```
-    Update `.env` with your database settings:
+    Edit `.env` for your DB settings:
     ```env
     DB_CONNECTION=mysql
     DB_HOST=127.0.0.1
@@ -77,35 +83,47 @@ Follow these steps to set up the project locally.
     DB_USERNAME=root
     DB_PASSWORD=
     ```
-
-5.  **Generate Application Key**
+5. **Generate Application Key**
     ```bash
     php artisan key:generate
     ```
-
-6.  **Database Migration & Seeding**
-    Run migrations and seed the database with initial data (including test users and packages).
+6. **Database Migration & Seeding**
     ```bash
     php artisan migrate --seed
     ```
-    *Note: This runs `DatabaseSeeder`, which populates pilgrims, agents, events, hotels, transport, packages, and reservations.*
-
-7.  **Build Assets**
+    *Seeds initial data: pilgrims, agents, events, hotels, transport, packages, reservations.*
+7. **Build Assets**
     ```bash
     npm run build
     ```
-
-8.  **Run the Application**
-    Start the local development server.
+8. **Run the Application**
     ```bash
     php artisan serve
     ```
-    Access the application at `http://localhost:8000`.
+    Visit: [http://localhost:8000](http://localhost:8000)
 
-## Contributing
+---
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## 👤 Default Credentials
 
-## License
+> **Admin**
+> - Email: `admin@umrah.com`
+> - Password: `password`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+> **Agent**
+> - Email: `agent@umrah.com`
+> - Password: `password`
+
+*You can change these credentials after login.*
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please submit a Pull Request.
+
+---
+
+## 📄 License
+
+This project is open-sourced under the [MIT license](https://opensource.org/licenses/MIT).

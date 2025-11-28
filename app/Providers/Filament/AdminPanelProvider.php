@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->brandName('Makkah Voyage')
             ->brandLogo(asset('storage/images/logo.png'))
-            ->brandLogoHeight('3rem')
+            ->brandLogoHeight('4rem')
             ->colors([
                 'primary' => Color::Amber,
             ])
