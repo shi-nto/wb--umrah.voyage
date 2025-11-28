@@ -83,10 +83,7 @@
     npm install
     ```
 4. **Environment Setup**
-    Copy the example environment file and configure your database credentials:
-    ```bash
-    cp .env.example .env
-    ```
+   
     Edit `.env` for your DB settings:
     ```env
     DB_CONNECTION=pgsql
