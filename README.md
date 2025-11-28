@@ -127,14 +127,29 @@
 ## 👤 Default Credentials
 
 > **Admin**
-> - 40 admin users are seeded with random emails (check your database `users` table for an email with `role = 'admin'`).
-> - Password for all: `password`
+> - Email: `admin@umrah.com`
+> - Password: `password`
 
 > **Agent**
 > - Email: `agent@gmail.com`
 > - Password: `agent123`
 
-*You can change these credentials after login. For admin, use any seeded admin email from your database with password `password`.*
+*You can change these credentials after login.*
+
+### Re-seed / Verify admin (development)
+
+After updating the seeder, run the following to re-seed the admin user:
+
+```powershell
+php artisan db:seed --class=Database\\Seeders\\AdminUserSeeder
+```
+
+To verify the admin exists, run:
+
+```powershell
+php artisan tinker
+>>> \App\\Models\\User::where('email', 'admin@umrah.com')->first();
+```
 
 ---
 

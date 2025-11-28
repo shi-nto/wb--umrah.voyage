@@ -12,6 +12,16 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        \App\Models\User::factory(40)->create(['role' => 'admin']);
+        DB::table('users')->updateOrInsert(
+            ['email' => 'admin@umrah.com'],
+            [
+                'name' => 'Administrator',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'email_verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
     }
 }
