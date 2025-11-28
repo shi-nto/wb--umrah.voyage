@@ -14,6 +14,17 @@ class ReservationActionController extends Controller
             abort(403);
         }
 
+        // Check if payment is complete
+        if ($reservation->montantPaye < $reservation->totalPrix) {
+            // Create payment reminder alert
+            \App\Models\Alert::create([
+                'pilgrim_id' => $reservation->pilgrim_id,
+                'type' => 'Payment Reminder',
+                'message' => 'Your payment is incomplete. Remaining balance: SAR ' . number_format($reservation->totalPrix - $reservation->montantPaye, 2),
+            ]);
+            return back()->with('error', 'Payment incomplete. Alert sent to pilgrim.');
+        }
+
         if (! $reservation->selectionne) {
             $reservation->update(['selectionne' => true]);
             \App\Models\Alert::create([

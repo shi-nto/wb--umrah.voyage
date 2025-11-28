@@ -13,6 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Carbon\Carbon;
 
 class ReservationResource extends Resource
 {
@@ -26,7 +27,7 @@ class ReservationResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->role === 'admin';
+        return auth()->check() && in_array(auth()->user()->role, ['admin', 'agent']);
     }
 
     public static function canViewAny(): bool
@@ -80,6 +81,8 @@ class ReservationResource extends Resource
                                     $set('pilgrim_reservations', '');
                                 }
                             }),
+                        
+                        // Passport validation removed per request
                         Forms\Components\TextInput::make('pilgrim_info')
                             ->label('Pilgrim Details')
                             ->disabled()
@@ -224,7 +227,14 @@ class ReservationResource extends Resource
                             ->label('Amount Paid (SAR)')
                             ->numeric()
                             ->prefix('SAR')
-                            ->default(0),
+                            ->default(0)
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                $total = (float) ($get('totalPrix') ?? 0);
+                                $paid = (float) ($state ?? 0);
+                                $balance = $total - $paid;
+                                $set('balance_display', number_format($balance, 2));
+                            }),
                         
                         Forms\Components\Placeholder::make('balance_display')
                             ->label('Remaining Balance (SAR)')

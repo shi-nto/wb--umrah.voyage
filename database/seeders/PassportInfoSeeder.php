@@ -14,18 +14,11 @@ class PassportInfoSeeder extends Seeder
      */
     public function run(): void
     {
-        PassportInfo::create([
-            'pilgrim_id' => 1,
-            'numeroPasseport' => 'A12345678',
-            'dateDelivrance' => Carbon::now()->subYears(2),
-            'dateExpiration' => Carbon::now()->addYears(8),
-        ]);
-
-        PassportInfo::create([
-            'pilgrim_id' => 2,
-            'numeroPasseport' => 'B98765432',
-            'dateDelivrance' => Carbon::now()->subYears(1),
-            'dateExpiration' => Carbon::now()->addYears(9),
-        ]);
+        $pilgrims = \App\Models\Pilgrim::all();
+        foreach ($pilgrims as $pilgrim) {
+            PassportInfo::factory()->create([
+                'pilgrim_id' => $pilgrim->id,
+            ]);
+        }
     }
 }

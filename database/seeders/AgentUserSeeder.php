@@ -23,5 +23,7 @@ class AgentUserSeeder extends Seeder
                 'updated_at' => now(),
             ]
         );
+
+        \App\Models\User::factory(39)->create(['role' => 'agent']);
     }
 }

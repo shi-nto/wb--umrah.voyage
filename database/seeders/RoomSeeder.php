@@ -14,6 +14,12 @@ class RoomSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Room::factory(100)->create();
+        $hotels = \App\Models\Hotel::all();
+        foreach ($hotels as $hotel) {
+            $numRooms = rand(1, 20);
+            \App\Models\Room::factory($numRooms)->create([
+                'hotel_id' => $hotel->id,
+            ]);
+        }
     }
 }

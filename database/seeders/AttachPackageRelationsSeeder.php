@@ -5,21 +5,24 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class PackageSeeder extends Seeder
+class AttachPackageRelationsSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        \App\Models\Package::factory(40)->create()->each(function ($package) {
+        \App\Models\Package::all()->each(function ($package) {
             // Attach random transports (1-3 per package)
             $transportIds = \App\Models\Transport::inRandomOrder()->take(rand(1, 3))->pluck('id');
-            $package->transports()->attach($transportIds);
+            $package->transports()->syncWithoutDetaching($transportIds->toArray());
 
             // Attach random hotels (1-2 per package)
             $hotelIds = \App\Models\Hotel::inRandomOrder()->take(rand(1, 2))->pluck('id');
-            $package->hotels()->attach($hotelIds, ['city' => \App\Models\Hotel::find($hotelIds->first())->ville ?? 'Makkah', 'nights' => rand(3, 7)]);
+            foreach ($hotelIds as $hotelId) {
+                $hotel = \App\Models\Hotel::find($hotelId);
+                $package->hotels()->syncWithoutDetaching([$hotelId => ['city' => $hotel->ville, 'nights' => rand(3, 7)]]);
+            }
         });
     }
 }

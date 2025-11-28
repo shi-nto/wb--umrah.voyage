@@ -12,14 +12,6 @@ class AgentSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Agent::create([
-            'nom' => 'Agent One',
-            'telephone' => '0645678901',
-        ]);
-
-        \App\Models\Agent::create([
-            'nom' => 'Agent Two',
-            'telephone' => '0656789012',
-        ]);
+        \App\Models\Agent::factory(40)->create();
     }
 }

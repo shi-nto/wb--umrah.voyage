@@ -15,8 +15,8 @@ class PackageFactory extends Factory
             'typePack' => $this->faker->randomElement(['Standard', 'Premium', 'VIP']),
             'category' => $this->faker->randomElement(['Adult', 'Child']),
             'programme' => $this->faker->randomElement(['Full Umrah', 'Basic Umrah', 'Extended']),
-            'agent_id' => null, // Will be set later or left null
-            'event_id' => 1, // Assuming event with id 1 exists
+            'agent_id' => \App\Models\Agent::inRandomOrder()->first()->id ?? null,
+            'event_id' => \App\Models\Event::inRandomOrder()->first()->id ?? 1,
         ];
     }
 }

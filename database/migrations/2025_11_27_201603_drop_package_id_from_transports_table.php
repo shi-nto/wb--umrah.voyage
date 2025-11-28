@@ -23,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transports', function (Blueprint $table) {
-            $table->foreignId('package_id')->constrained()->onDelete('cascade');
+            $table->foreignId('package_id')->nullable()->constrained()->onDelete('cascade');
         });
     }
 };

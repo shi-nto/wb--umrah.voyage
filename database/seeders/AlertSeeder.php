@@ -13,16 +13,6 @@ class AlertSeeder extends Seeder
      */
     public function run(): void
     {
-        Alert::create([
-            'pilgrim_id' => 1,
-            'type' => 'Health',
-            'message' => 'Pilgrim has a medical condition requiring attention.',
-        ]);
-
-        Alert::create([
-            'pilgrim_id' => 2,
-            'type' => 'Payment',
-            'message' => 'Outstanding payment reminder.',
-        ]);
+        Alert::factory(40)->create();
     }
 }

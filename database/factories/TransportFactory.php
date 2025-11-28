@@ -17,7 +17,6 @@ class TransportFactory extends Factory
     public function definition(): array
     {
         return [
-            'package_id' => 1, // Assuming package with id 1 exists
             'type' => $this->faker->randomElement(['Flight', 'Bus', 'Train']),
             'provider' => $this->faker->company(),
             'departCity' => $this->faker->city(),
