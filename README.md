@@ -41,7 +41,7 @@
 - **Admin Panel**: Filament 3
 - **Frontend**: TailwindCSS 4
 - **Build Tool**: Vite
-- **Database**: MySQL
+- **Database**: PostgreSQL
 
 ---
 
@@ -52,7 +52,7 @@
 - PHP ^8.2
 - Composer
 - Node.js & NPM
-- MySQL
+- PostgreSQL
 
 ### Installation Steps
 
@@ -76,12 +76,12 @@
     ```
     Edit `.env` for your DB settings:
     ```env
-    DB_CONNECTION=mysql
+    DB_CONNECTION=pgsql
     DB_HOST=127.0.0.1
-    DB_PORT=3306
+    DB_PORT=5432
     DB_DATABASE=umrah_voyage
-    DB_USERNAME=root
-    DB_PASSWORD=
+    DB_USERNAME=postgres
+    DB_PASSWORD=your_password
     ```
 5. **Generate Application Key**
     ```bash
@@ -96,7 +96,13 @@
     ```bash
     npm run build
     ```
-8. **Run the Application**
+
+8. **Run the Application (Development Mode)**
+    In two separate terminals, run:
+    ```bash
+    npm run dev
+    ```
+    and
     ```bash
     php artisan serve
     ```
