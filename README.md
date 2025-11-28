@@ -71,7 +71,7 @@
 
 1. **Clone the repository**
     ```bash
-    git clone https://github.com/yourusername/wb--umrah.voyage.git
+    git clone https://github.com/shi-nto/wb--umrah.voyage.git
     cd wb--umrah.voyage
     ```
 2. **Install PHP dependencies**
