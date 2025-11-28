@@ -110,6 +110,7 @@
     npm run build
     ```
 
+
 8. **Storage & images**
 
 - Place your uploaded images under `storage/app/public/images` (e.g. `storage/app/public/images/logo.png`). Filament's `asset('storage/images/...')` expects files to be served from `public/storage/images` via the storage symlink.
@@ -118,16 +119,7 @@
     php artisan storage:link
     ```
 
-- Prevent images from being pushed to the repository (keep them local):
-    1. Add `storage/images` (and `public/storage/images`) to `.gitignore` (already included in this repo).
-    2. If images were already committed to git, stop tracking them without deleting local files:
-    ```powershell
-    git rm -r --cached storage/app/public/images
-    git commit -m "Stop tracking storage images"
-    git push
-    ```
-
-> Note: The `git rm --cached` command only removes files from the git index (so they won't be pushed anymore) but keeps them on your local filesystem. If you need to purge images from the repository history as well, consider using the BFG Repo-Cleaner or `git filter-branch` (advanced, and affects repository history).
+- Images in `storage/app/public/images` and `public/storage/images` will be tracked and pushed to the repository by default. No special git configuration is needed.
 
 9. **Run the Application (Development Mode)**
     In two separate terminals, run:
