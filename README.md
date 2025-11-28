@@ -136,7 +136,7 @@
     ```bash
     php artisan serve
     ```
-    Visit the app: [http://localhost:8000](http://localhost:8000)
+  
 
     Filament admin panel is available at: [http://localhost:8000/admin](http://localhost:8000/admin)
 
