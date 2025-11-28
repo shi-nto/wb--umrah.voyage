@@ -122,7 +122,7 @@
     ```
    
     ```powershell
-    cp .\storage\images\logo.png .\storage\app\public\images\
+   cp .\storage\images\logo.png .\storage\app\public\images
     ```
 
 - Images in `storage/app/public/images` and `public/storage/images` will be tracked and pushed to the repository by default. No special git configuration is needed.
