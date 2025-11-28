@@ -47,12 +47,25 @@
 
 ## 🚀 Getting Started
 
+
 ### Prerequisites
 
-- PHP ^8.2
-- Composer
+- PHP ^8.2 (Tested with PHP 8.4.14)
+- Composer (Tested with Composer 2.9.0)
 - Node.js & NPM
 - PostgreSQL
+
+> Example environment:
+> ```
+> Microsoft Corporation. All rights reserved.
+> 
+> C:\Users\Sekeru>composer --version
+> Composer version 2.9.0 2025-11-13 10:37:16
+> PHP version 8.4.14 (C:\php\php.exe)
+> Run the "diagnose" command to get more detailed diagnostics output.
+> 
+> C:\Users\Sekeru>
+> ```
 
 ### Installation Steps
 
