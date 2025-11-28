@@ -116,6 +116,11 @@
     php artisan storage:link
     ```
 
+    If you have local images in `storage/app/images` and want to copy the `logo.png` into the publicly served folder, run (PowerShell):
+    ```powershell
+    cp .\storage\app\images\logo.png .\storage\app\public\images\
+    ```
+
 - Images in `storage/app/public/images` and `public/storage/images` will be tracked and pushed to the repository by default. No special git configuration is needed.
 
 9. **Run the Application (Development Mode)**
