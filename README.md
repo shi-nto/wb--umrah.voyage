@@ -123,17 +123,18 @@
 
 ---
 
+
 ## 👤 Default Credentials
 
 > **Admin**
-> - Email: `admin@umrah.com`
-> - Password: `password`
+> - 40 admin users are seeded with random emails (check your database `users` table for an email with `role = 'admin'`).
+> - Password for all: `password`
 
 > **Agent**
-> - Email: `agent@umrah.com`
-> - Password: `password`
+> - Email: `agent@gmail.com`
+> - Password: `agent123`
 
-*You can change these credentials after login.*
+*You can change these credentials after login. For admin, use any seeded admin email from your database with password `password`.*
 
 ---
 
