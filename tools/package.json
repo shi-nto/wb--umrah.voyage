@@ -1,0 +1,11 @@
+{
+  "name": "umrah-pdf-tools",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "pdf": "node pdf.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  }
+}

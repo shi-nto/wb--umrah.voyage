@@ -51,6 +51,29 @@ class PilgrimResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('tel_2')
                     ->maxLength(255),
+                Forms\Components\Section::make('Passports')
+                    ->schema([
+                            Forms\Components\Repeater::make('passports')
+                                ->relationship('passports')
+                            ->schema([
+                                Forms\Components\TextInput::make('numeroPasseport')
+                                    ->label('Passport Number')
+                                    ->maxLength(255)
+                                    ->required(),
+                                Forms\Components\DatePicker::make('dateDelivrance')
+                                    ->label('Issue Date')
+                                    ->required(),
+                                Forms\Components\DatePicker::make('dateExpiration')
+                                    ->label('Expiry Date')
+                                    ->required(),
+                            ])
+                            ->defaultItems(0)
+                            ->minItems(0)
+                            ->columnSpanFull()
+                            ->collapsible()
+                            ->createItemButtonLabel('Add Passport'),
+                    ])
+                    ->columns(1),
                 Forms\Components\TextInput::make('typeDiabete')
                     ->maxLength(255),
                 Forms\Components\Textarea::make('commentaire'),

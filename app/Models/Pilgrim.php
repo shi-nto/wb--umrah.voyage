@@ -20,9 +20,31 @@ class Pilgrim extends Model
         'commentaire',
     ];
 
+    /**
+     * Many passports for this pilgrim.
+     */
+    public function passports()
+    {
+        return $this->hasMany(PassportInfo::class);
+    }
+
+    /**
+     * Keep compatibility for existing code that expects passportInfo to return one passport.
+     * We'll return the latest passport by expiration date.
+     */
     public function passportInfo()
     {
-        return $this->hasOne(PassportInfo::class);
+        // Use latestOfMany() if supported — fallback to ordering if not available.
+        if (method_exists($this, 'hasOne')) {
+            try {
+                return $this->hasOne(PassportInfo::class)->latestOfMany('dateExpiration');
+            } catch (\Throwable $e) {
+                // Fallback: return the most recently-expired passport via collection
+                return $this->passports()->orderByDesc('dateExpiration');
+            }
+        }
+
+        return $this->passports()->orderByDesc('dateExpiration');
     }
 
     public function reservations()

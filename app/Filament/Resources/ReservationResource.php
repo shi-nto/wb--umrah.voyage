@@ -6,6 +6,7 @@ use App\Filament\Resources\ReservationResource\Pages;
 use App\Filament\Resources\ReservationResource\RelationManagers;
 use App\Models\Reservation;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -49,12 +50,16 @@ class ReservationResource extends Resource
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 if ($state) {
-                                    $pilgrim = \App\Models\Pilgrim::with('passportInfo', 'relationshipsFrom.pilgrimB', 'relationshipsTo.pilgrimA', 'reservations.package')->find($state);
+                                    $pilgrim = \App\Models\Pilgrim::with(['passports', 'relationshipsFrom.pilgrimB', 'relationshipsTo.pilgrimA', 'reservations.package'])->find($state);
                                     $set('pilgrim_info', $pilgrim ? "Name: {$pilgrim->nomFrancais} | Phone: {$pilgrim->tel_1} | City: {$pilgrim->ville}" : '');
                                     
-                                    // Passport
-                                    $passport = $pilgrim->passportInfo;
-                                    $passportInfo = $passport ? "Number: {$passport->numeroPasseport}, Issue: {$passport->dateDelivrance}, Expiry: {$passport->dateExpiration}" : 'No passport information available';
+                                    // Passport(s)
+                                    $passportInfo = 'No passport information available';
+                                    if ($pilgrim->passports && $pilgrim->passports->count()) {
+                                        $passportInfo = $pilgrim->passports->map(function ($p) {
+                                            return "Number: {$p->numeroPasseport}, Issue: {$p->dateDelivrance}, Expiry: {$p->dateExpiration}";
+                                        })->join("\n");
+                                    }
                                     $set('pilgrim_passport', $passportInfo);
                                     
                                     // Relationships
@@ -88,11 +93,12 @@ class ReservationResource extends Resource
                             ->disabled()
                             ->dehydrated(false)
                             ->columnSpanFull(),
-                        Forms\Components\TextInput::make('pilgrim_passport')
+                        Forms\Components\Textarea::make('pilgrim_passport')
                             ->label('Passport Information')
                             ->disabled()
                             ->dehydrated(false)
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->rows(3),
                         Forms\Components\Textarea::make('pilgrim_relationships')
                             ->label('Family Relationships')
                             ->disabled()
@@ -119,6 +125,29 @@ class ReservationResource extends Resource
                             ->required()
                             ->reactive()
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->typePack} - {$record->category} - {$record->programme}")
+                            ->afterStateHydrated(function ($state, callable $set, callable $get) {
+                                if ($state) {
+                                    $package = \App\Models\Package::with('transports', 'event')->find($state);
+                                    if ($package) {
+                                        $transportTotal = $package->transports->sum('price');
+                                        $set('transport_total', $transportTotal);
+                                        if ($package->event) {
+                                            $start = Carbon::parse($package->event->start_date);
+                                            $end = Carbon::parse($package->event->end_date);
+                                            $days = $end->diffInDays($start) + 1;
+                                            $set('event_days', $days);
+                                        }
+                                        // If a room is already selected, update total
+                                        $roomId = $get('room_id');
+                                        if ($roomId) {
+                                            $room = \App\Models\Room::find($roomId);
+                                            $days = $get('event_days') ?? 0;
+                                            $hotelTotal = $room ? $room->pricePerNight * $days : 0;
+                                            $set('totalPrix', $transportTotal + $hotelTotal);
+                                        }
+                                    }
+                                }
+                            })
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 if ($state) {
                                     $package = \App\Models\Package::with('transports', 'event')->find($state);
@@ -153,17 +182,39 @@ class ReservationResource extends Resource
                             ->label('Select Hotel from Package')
                             ->options(function (callable $get) {
                                 $packageId = $get('package_id');
+                                $options = [];
                                 if ($packageId) {
                                     $package = \App\Models\Package::with('hotels')->find($packageId);
                                     if ($package) {
-                                        return $package->hotels->pluck('nom', 'id');
+                                        $options = $package->hotels->pluck('nom', 'id')->toArray();
                                     }
                                 }
-                                return [];
+                                // If editing an existing reservation and its room's hotel isn't among the package hotels,
+                                // include that hotel so the selection shows correctly.
+                                $roomId = $get('room_id');
+                                if ($roomId) {
+                                    $room = \App\Models\Room::find($roomId);
+                                    if ($room && !isset($options[$room->hotel_id])) {
+                                        $options[$room->hotel_id] = $room->hotel->nom ?? 'Hotel ' . $room->hotel_id;
+                                    }
+                                }
+                                return $options;
                             })
                             ->required()
                             ->placeholder('Select a package first')
                             ->reactive()
+                            ->afterStateHydrated(function ($state, callable $set, callable $get) {
+                                // On edit, if selected_hotel is empty but room_id is set, prefill selected_hotel
+                                if (empty($state)) {
+                                    $roomId = $get('room_id');
+                                    if ($roomId) {
+                                        $room = \App\Models\Room::find($roomId);
+                                        if ($room) {
+                                            $set('selected_hotel', $room->hotel_id);
+                                        }
+                                    }
+                                }
+                            })
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 // Reset room when hotel changes
                                 $set('room_id', null);
@@ -194,6 +245,16 @@ class ReservationResource extends Resource
                             ->required()
                             ->placeholder('Select a hotel first')
                             ->reactive()
+                            ->afterStateHydrated(function ($state, callable $set, callable $get) {
+                                // On form load, if room_id is already set, ensure totals update
+                                if ($state) {
+                                    $room = \App\Models\Room::find($state);
+                                    $days = $get('event_days') ?? 0;
+                                    $hotelTotal = $room ? $room->pricePerNight * $days : 0;
+                                    $transportTotal = $get('transport_total') ?? 0;
+                                    $set('totalPrix', $transportTotal + $hotelTotal);
+                                }
+                            })
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 if ($state) {
                                     $room = \App\Models\Room::find($state);
@@ -333,13 +394,29 @@ class ReservationResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(function ($record) {
-                            $record->update(['selectionne' => true]);
-                            \App\Models\Alert::create([
-                                'pilgrim_id' => $record->pilgrim_id,
-                                'type' => 'Booking Confirmed',
-                                'message' => 'Your Umrah booking has been confirmed.',
-                            ]);
-                        })
+                                $balance = ($record->totalPrix ?? 0) - ($record->montantPaye ?? 0);
+                                if ($balance > 0) {
+                                    Notification::make()
+                                        ->danger()
+                                        ->title('Payment not complete')
+                                        ->body("Remaining balance: SAR " . number_format($balance, 2) . ". This pilgrim hasn't completed payment.")
+                                        ->send();
+
+                                    return; // Don't confirm if balance is not fully paid
+                                }
+
+                                $record->update(['selectionne' => true]);
+                                \App\Models\Alert::create([
+                                    'pilgrim_id' => $record->pilgrim_id,
+                                    'type' => 'Booking Confirmed',
+                                    'message' => 'Your Umrah booking has been confirmed.',
+                                ]);
+                                Notification::make()
+                                    ->success()
+                                    ->title('Booking confirmed')
+                                    ->body('The reservation has been confirmed.')
+                                    ->send();
+                            })
                         ->visible(fn ($record) => !$record->selectionne)
                         ->requiresConfirmation()
                         ->modalHeading('Confirm Booking')
@@ -404,13 +481,29 @@ class ReservationResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(function ($record) {
-                            $record->update(['selectionne' => true]);
-                            \App\Models\Alert::create([
-                                'pilgrim_id' => $record->pilgrim_id,
-                                'type' => 'Booking Confirmed',
-                                'message' => 'Your Umrah booking has been confirmed.',
-                            ]);
-                        })
+                                $balance = ($record->totalPrix ?? 0) - ($record->montantPaye ?? 0);
+                                if ($balance > 0) {
+                                    Notification::make()
+                                        ->danger()
+                                        ->title('Payment not complete')
+                                        ->body("Remaining balance: SAR " . number_format($balance, 2) . ". This pilgrim hasn't completed payment.")
+                                        ->send();
+
+                                    return; // Don't confirm if balance is not fully paid
+                                }
+
+                                $record->update(['selectionne' => true]);
+                                \App\Models\Alert::create([
+                                    'pilgrim_id' => $record->pilgrim_id,
+                                    'type' => 'Booking Confirmed',
+                                    'message' => 'Your Umrah booking has been confirmed.',
+                                ]);
+                                Notification::make()
+                                    ->success()
+                                    ->title('Booking confirmed')
+                                    ->body('The reservation has been confirmed.')
+                                    ->send();
+                            })
                         ->visible(fn ($record) => !$record->selectionne)
                         ->requiresConfirmation()
                         ->modalHeading('Confirm Booking')

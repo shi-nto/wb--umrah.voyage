@@ -32,14 +32,26 @@ class PackageResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('typePack')
+                Forms\Components\Select::make('typePack')
                     ->label('Package Type')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('category')
+                    ->options([
+                        'Economy Packages' => 'Economy Packages',
+                        'Deluxe Packages' => 'Deluxe Packages',
+                        'Luxury Packages' => 'Luxury Packages',
+                        'Customized Packages' => 'Customized Packages',
+                        'Group Packages' => 'Group Packages',
+                    ])
+                    
+                    ->required(),
+
+                Forms\Components\Select::make('category')
                     ->label('Category')
-                    ->required()
-                    ->maxLength(255),
+                    ->options([
+                        'Mens Only' => 'Mens Only',
+                        'Womens Only' => 'Womens Only',
+                        'Family' => 'Family',
+                    ])
+                    ->required(),
                 Forms\Components\Textarea::make('programme')
                     ->label('Program Description')
                     ->required()

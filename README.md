@@ -1,4 +1,3 @@
-
 # Umrah Voyage
 
 <p align="center">
@@ -78,6 +77,10 @@
     ```bash
     composer install
     ```
+    If you plan to use the PHP-only PDF flow (mPDF), run:
+    ```bash
+    composer require mpdf/mpdf
+    ```
 3. **Install JavaScript dependencies**
     ```bash
     npm install
@@ -142,6 +145,76 @@
 
 ---
 
+## 📨 PDF Generation (recommended)
+
+This repo includes a reliable Chrome-based PDF generator using Puppeteer which reproduces Chrome's rendering (good complex-script shaping for Arabic).
+
+- Place an Arabic-capable font in `public/fonts/`, for example `public/fonts/NotoNaskhArabic-Regular.ttf`.
+- A Blade view is available at `resources/views/pdf/test-ar.blade.php` and a test route at `/pdf/test-ar`.
+- Tools for generating PDF are under the `tools/` folder.
+
+Quick steps (Windows PowerShell):
+
+```powershell
+# 1) Start the Laravel dev server
+php artisan serve --host=127.0.0.1 --port=8000
+
+# 2) Install Puppeteer inside tools (this will download Chromium by default)
+Set-Location .\tools
+npm install
+
+# 3) Generate the PDF (uses http://localhost:8000/pdf/test-ar by default)
+npm run pdf
+```
+
+If you already have Chrome installed and want Puppeteer to use it (skip Chromium download), set an env var and modify `tools/pdf.js` to pass `executablePath` to `puppeteer.launch()` pointing to your Chrome binary.
+
+The generated PDF will be saved as `test-ar.pdf` in the `tools/` folder by default. You can also run:
+
+```powershell
+node pdf.js http://localhost:8000/pdf/test-ar ..\storage\test-ar.pdf
+```
+
+This approach ensures Arabic shaping and RTL layout are preserved the same way Chrome renders them.
+
+If you must keep using `dompdf` (instead of mPDF or Puppeteer), there's a recommended fix:
+
+- Integrate the `ar-php` library (I18N/Arabic) into dompdf so Arabic letters are reshaped before rendering.
+
+Quick `dompdf` + `ar-php` steps (manual):
+
+1. Download `ar-php` from https://www.ar-php.org/ and copy the `I18N/Arabic` files into:
+    `vendor/dompdf/dompdf/lib/I18N/Arabic/` (replace the stub `Glyphs.php` there).
+2. In `vendor/dompdf/dompdf/src/Renderer/Text.php` the project already attempts to require
+    `vendor/dompdf/dompdf/lib/I18N/Arabic/Glyphs.php` and will call `utf8Glyphs($text, 150)`.
+3. In the `Glyphs.php` file from `ar-php` you may want to increase the `$max_chars` or the
+    `utf8Glyphs` default to 150 for long lines.
+
+Note: Editing `vendor/` files is fragile — when you run `composer update` these changes
+may be overwritten. For a permanent solution, consider forking `dompdf` or adding a
+post-install Composer script that copies the `I18N/Arabic` files into `vendor/dompdf`.
+
+
+Server-side reservation PDFs
+- The app now uses Puppeteer to generate reservation PDFs (the existing admin `admin/reservations/{reservation}/pdf` route will call the Node renderer).
+- Requirements: ensure `php artisan serve` is running so Puppeteer can fetch the signed URL, and run `npm install` in `tools/` to install Puppeteer.
+- Place the NotoNaskh Arabic font file under `storage/app/public/` (e.g. `storage/app/public/NotoNaskhArabic-VariableFont_wght.ttf`) and run `php artisan storage:link` so the font is available at `public/storage/`.
+
+Example (generate a reservation PDF from the app):
+
+```powershell
+# start Laravel
+php artisan serve --host=127.0.0.1 --port=8000
+
+# in tools folder (install once)
+cd tools
+npm install
+
+# then, from the app UI click the admin 'Download PDF' reservation button, or call the controller route
+# the controller will spawn Node to render the signed URL and return the generated PDF.
+```
+
+
 
 ## 👤 Default Credentials
 
@@ -181,3 +254,9 @@ Contributions are welcome! Please submit a Pull Request.
 ## 📄 License
 
 This project is open-sourced under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Documentation Video
+
+You can watch the documentation video below:
+
+[Documentation Video](documentation_video.mp4)

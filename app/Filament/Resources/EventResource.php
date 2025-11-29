@@ -25,6 +25,21 @@ class EventResource extends Resource
 
     public static function canViewAny(): bool
     {
+        return auth()->check() && in_array(auth()->user()->role, ['admin', 'agent']);
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->check() && in_array(auth()->user()->role, ['admin', 'agent']);
+    }
+
+    public static function canEdit($record = null): bool
+    {
+        return auth()->check() && in_array(auth()->user()->role, ['admin', 'agent']);
+    }
+
+    public static function canDelete($record = null): bool
+    {
         return auth()->check() && auth()->user()->role === 'admin';
     }
 

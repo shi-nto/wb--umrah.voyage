@@ -16,4 +16,6 @@ class EditPilgrim extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    // Passport create/update is handled by the Repeater relationship in the form
 }
